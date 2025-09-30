@@ -1,0 +1,399 @@
+----------------------------------------------------------------------------------------
+Lab #1.1 Creating VDOM Trees 
+----------------------------------------------------------------------------------------
+
+Notes: Libraries like Preact provide a way to construct these descriptions, 
+which can then be compared against the browser's DOM tree. As each part of 
+the tree is compared, and the browser's DOM tree is updated to match the 
+structure described by the Virtual DOM tree.
+
+This is a useful tool, because it lets us compose user interfaces 
+declaratively rather than imperatively. Instead of describing how to 
+update the DOM in response to things like keyboard or mouse input, 
+we only need to describe what the DOM should look like after that input is received. 
+It means we can repeatedly give Preact descriptions of tree structures, a
+nd it will update the browser's DOM tree to match each new description – 
+regardless of its current structure.
+
+
+-> index.tsx
+
+import { createElement, render } from 'preact';
+
+let vdom = createElement(
+  'p',              // a <p> element
+  { class: 'big' }, // with class="big"
+  'Hello World!'    // and the text "Hello World!"
+);
+
+render(vdom, document.body);
+
+----------------------------------------------------------------------------------------
+Lab #1.2 Creating VDOM Trees using JSX
+----------------------------------------------------------------------------------------
+
+We can rewrite the previous example using JSX without changing its functionality. 
+JSX lets us describe our paragraph element using HTML-like syntax, 
+which can help keep things readable as we describe more complex trees. T
+he drawback of JSX is that our code is no longer written in JavaScript, 
+and must be compiled by a tool like Babel. Compilers do the work of 
+converting the JSX example below into the exact createElement() code 
+we saw in the previous example.
+
+-> index.tsx
+
+import { createElement, render } from 'preact';
+let vdom = <p class="big">Hello World!</p>;
+render(vdom, document.body);
+
+----------------------------------------------------------------------------------------
+Lab #1.3 Using expressions - discussion
+----------------------------------------------------------------------------------------
+
+code inside of a JSX element (within the angle brackets) is special syntax and not JavaScript. 
+To use JavaScript syntax like numbers or variables, you first need to "jump" back out 
+from JSX using an {expression} - similar to fields in a template.
+
+-> index.tsx
+
+let maybeBig = Math.random() > .5 ? 'big' : 'small';
+let vdom = <p class={maybeBig}>Hello {40 + 2}!</p>;
+render(vdom, document.body);
+
+----------------------------------------------------------------------------------------
+Lab #1.4 Using function definitions - discussion
+----------------------------------------------------------------------------------------
+
+The style prop is special, and allows an object value with one or more CSS properties 
+to set on the element. To pass an object as a prop value, you'll need to use an {expression}, 
+like style={{ property: 'value' }}.
+
+--> index.tsx
+import { render } from 'preact';
+
+function App() {
+  return (
+    <p class="big" style={{ color: 'purple' }}>
+      Hello <em>World</em>!
+    </p>
+  )
+}
+
+render(<App />, document.body);
+
+----------------------------------------------------------------------------------------
+Lab #2 Events
+----------------------------------------------------------------------------------------
+
+The following shows how events are registered in JavaScript
+
+function clicked() {
+  console.log('clicked')
+}
+const myButton = document.getElementById('my-button')
+myButton.addEventListener('click', clicked)
+
+In Preact, event handlers are registered declaratively as props on an element, 
+just like style and class. In general, any prop that has a name beginning with 
+"on" is an event handler. The value of an event handler prop is the handler function 
+to be called when that event occurs
+
+function clicked() {
+  console.log('clicked')
+}
+<button onClick={clicked}>
+
+
+--> index.tsx
+
+import { render } from "preact";
+
+function App() {
+
+  let i=0;
+
+  const clicked = () => {
+    i += 1;
+    console.log('hi' + i)
+    return i;
+  }
+
+  return (
+    <div>
+      <h3 class="count">Count:{i}</h3>
+      <button onClick={clicked}>Click Me!</button>
+    </div>
+  )
+}
+
+render(<App />, document.body);
+
+----------------------------------------------------------------------------------------
+Lab #3 Components
+----------------------------------------------------------------------------------------
+
+ A Component is a self-contained piece of an application that can be rendered 
+ as part of the Virtual DOM tree just like an HTML element. You can think of a 
+ Component like a function call: both are mechanisms that allow code reuse and indirection.
+
+function MyButton(props) {
+  return <button class="my-button">{props.text}</button>
+}
+
+let vdom = <MyButton text="Click Me!" />
+
+// remember createElement? here's what the line above compiles to:
+let vdom = createElement(MyButton, { text: "Click Me!" })
+
+--> index.tsx
+
+function MyButton(props) {
+  return <button class="my-button">{props.text}</button>
+}
+
+render(<MyButton text="Click me!" />, document.body)
+
+----------------------------------------------------------------------------------------
+Lab #3.1 Nesting Components
+----------------------------------------------------------------------------------------
+
+function MediaPlayer() {
+  return (
+    <div>
+      <MyButton text="Play" />
+      <MyButton text="Stop" />
+    </div>
+  )
+}
+
+render(<MediaPlayer />, document.body)
+
+---------------------------------------
+
+function MediaPlayer(props) {
+  return (
+    <div>
+      {props.playing ? (
+        <MyButton text="Stop" />
+      ) : (
+        <MyButton text="Play" />
+      )}
+    </div>
+  )
+}
+
+render(<MediaPlayer playing={false} />, document.body)
+// renders <button>Play</button>
+
+render(<MediaPlayer playing={true} />, document.body)
+// renders <button>Stop</button>
+
+----------------------------------------------------------------------------------------
+Lab #3.2 Component Children
+----------------------------------------------------------------------------------------
+
+Components can also be nested just like HTML elements. One of the reasons Components 
+are a powerful primitive is because they let us apply custom logic to control how 
+Virtual DOM elements nested within a component should be rendered.
+
+The way this works is deceptively simple: any Virtual DOM elements 
+nested within a component in JSX are passed to that component as a 
+special children prop. A component can choose where to place its children 
+by referencing them in JSX using a {children} expression. Or, components 
+can simply return the children value, and Preact will render those Virtual DOM 
+elements right where that Component was placed in the Virtual DOM tree.
+
+function MyButton(props) {
+  return <button class="my-button">{props.children}</button>
+}
+
+function App() {
+  return (
+    <MyButton>
+      <img src="icon.png" />
+      Click Me!
+    </MyButton>
+  )
+}
+
+render(<App />, document.body)
+
+
+----------------------------------------------------------------------------------------
+Lab #3.3 Component Classes
+----------------------------------------------------------------------------------------
+Function components take in props as their input, and return a Virtual DOM tree as 
+their output. Components can also be written as JavaScript classes, which get instantiated 
+by Preact and provide a render() method that works much like a function component.
+
+Class components are created by extending Preact's Component base class.
+
+import { Component } from 'preact';
+
+class MyButton extends Component {
+  render(props) {
+    return <button class="my-button">{props.children}</button>
+  }
+}
+
+render(<MyButton>Click Me!</MyButton>, document.body)
+
+-----------------
+
+The reason we might use a class to define a component is to keep track of the lifecycle of our component. 
+Each time Preact encounters a component when rendering a Virtual DOM tree, it will create a 
+new instance of our class (new MyButton()).
+
+Class components can also implement a number of lifecycle methods, 
+which Preact will call in response to changes in the Virtual DOM tree:
+
+class MyButton extends Component {
+  componentDidMount() {
+    console.log('Hello from a new <MyButton> component!')
+  }
+  componentDidUpdate() {
+    console.log('A <MyButton> component was updated!')
+  }
+  render(props) {
+    return <button class="my-button">{props.children}</button>
+  }
+}
+
+render(<MyButton>Click Me!</MyButton>, document.body)
+// logs: "Hello from a new <MyButton> component!"
+
+render(<MyButton>Click Me!</MyButton>, document.body)
+// logs: "A <MyButton> component was updated!"
+
+
+
+----------------------------------------------------------------------------------------
+Lab #3.4 Practical
+----------------------------------------------------------------------------------------
+
+Create a MyButton component that accepts style, children and onClick props, 
+and returns an HTML <button> element with those props applied.
+
+import { render } from "preact";
+
+function MyButton(props) {
+  return <button style={props.style} onClick={props.onClick}>{props.children}</button>
+}
+
+function App() {
+  const clicked = () => {
+    console.log('Hello!')
+  }
+
+  return (
+    <div>
+      <p class="count">Count:</p>
+      <MyButton style={{ color: 'purple' }} onClick={clicked}>Click me</MyButton>
+    </div>
+  )
+}
+
+render(<App />, document.getElementById("app"));
+
+
+----------------------------------------------------------------------------------------
+Lab #4 States
+----------------------------------------------------------------------------------------
+
+Both function and class components can have state - data stored by a component 
+that is used to change its Virtual DOM tree. When a component updates its state, 
+Preact re-renders that component using the updated state value. For function components, 
+this means Preact will re-invoke the function, whereas for class components it will only 
+re-invoke the class' render() method. 
+
+----------------------------------------------------------------------------------------
+Lab #4.1 States in class components
+----------------------------------------------------------------------------------------
+
+
+Class components have a state property, which is an object that holds data the 
+component can use when its render() method is called. A component can call this.setState() 
+to update its state property and request that it be re-rendered by Preact.
+
+class MyButton extends Component {
+  state = { clicked: false }
+
+  handleClick = () => {
+    this.setState({ clicked: true })
+  }
+
+  render() {
+    return (
+      <button onClick={this.handleClick}>
+        {this.state.clicked ? 'Clicked' : 'No clicks yet'}
+      </button>
+    )
+  }
+}
+
+----------------------------------------------------------------------------------------
+Lab #4.2 State in function components using hooks
+----------------------------------------------------------------------------------------
+
+Function components can have state too! While they don't have a this.state property 
+like class components, a tiny add-on module is included with Preact that provides 
+functions for storing and working with state inside function components, called "hooks".
+
+Hooks are special functions that can be called from within a function component. 
+They're special because they remember information across renders, 
+a bit like properties and methods on a class. For example, the useState hook 
+returns an Array containing a value and a "setter" function that can be called 
+to update that value. When a component is invoked (re-rendered) multiple times, 
+any useState() calls it makes will return the exact same Array each time.
+
+function User() {
+  const [name, setName] = useState("Bob")    // slot 0
+  const [age, setAge] = useState(42)         // slot 1
+  const [online, setOnline] = useState(true) // slot 2
+}
+
+-------------------- example
+
+import { useState } from 'preact/hooks'
+
+const MyButton = () => {
+  const [clicked, setClicked] = useState(false)
+
+  const handleClick = () => {
+    setClicked(true)
+  }
+
+  return (
+    <button onClick={handleClick}>
+      {clicked ? 'Clicked' : 'No clicks yet'}
+    </button>
+  )
+}
+
+----------------------------------------------------------------------------------------
+Lab #4.3 Practical
+----------------------------------------------------------------------------------------
+
+import { render } from 'preact';
+import { useState } from 'preact/hooks';
+
+function MyButton(props) {
+  return <button style={props.style} onClick={props.onClick}>{props.children}</button>
+}
+
+function App() {
+  const [count, setCount] = useState(0)
+
+  const clicked = () => {
+    setCount(count + 1)
+  }
+
+  return (
+    <div>
+      <p class="count">Count: {count}</p>
+      <MyButton style={{ color: 'purple' }} onClick={clicked}>Click me</MyButton>
+    </div>
+  )
+}
+
+render(<App />, document.body);

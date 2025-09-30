@@ -1,0 +1,117 @@
+Part #1:
+
+
+Step #1: Create a composite Component
+
+ojet create component oj-name-badge
+
+RESULT: Oracle JET tooling creates the name-badge composite component in the 
+src/js/jet-composites directory. The composite component name 
+contains a hyphen and is lowercase, as required by the W3C naming conventions for 
+custom components.
+
+Step #2: 
+
+In your file system, navigate to the /JET_Web_Application/src/js/viewModels 
+directory and open the incidents.js file in an editor. Modify as below:
+
+define(['jet-composites/oj-name-badge/1.0.0/loader'],
+
+ Notice the user of the loader.js module of the oj-name-badge component
+
+Step #3:
+
+In incidents.html, copy the following:
+
+<div class="oj-hybrid-padding">
+  <h1>Incidents Content Area</h1>
+  <div>
+  <oj-name-badge></oj-name-badge>
+  </div>
+</div>
+
+Step #4:
+
+Serve the Application
+ojet Serve
+
+The browser displays the navdrawer starter template 
+with the default message visible in the Incidents tab of your web application.
+
+
+-----------------------------------------------------------------------------------
+
+Part 2:
+
+Step #1:
+
+Edit the component.json
+
+{
+  "name": "name-badge",
+  "displayName": "oj-name-badge",
+  "description": "Component for displaying a badge with a name and an image",
+  "version": "1.0.0",
+  "jetVersion": "^5.0.0",
+  "properties": {
+      "badgeName" : { "type" : "string" },
+      "badgeImage" : { "type" : "string" }
+  }
+}
+
+Step #2:
+
+Define component view
+
+<div class="badge-face">
+  <oj-avatar src="[[$properties.badgeImage]]" size="lg"></oj-avatar>
+  <h3><oj-bind-text value="[[$properties.badgeName]]"></oj-bind-text></h3>
+</div>
+
+Step #3:
+
+Define component viewModel:
+
+Add 'ojs/ojavatar' in component viewmodel
+
+
+
+Step #4:
+
+Define component CSS
+
+    oj-name-badge:not(.oj-complete){
+    visibility: hidden;
+    }
+    oj-name-badge{
+    display : block;
+    width : 200px;
+    height: 200px;
+    margin : 10px;
+    }
+    oj-name-badge .badge-face {
+    height : 100%;
+    width : 100%;
+    background-color : #80C3C8;
+    border-radius: 5px;
+    text-align: center;
+    padding-top: 30px;
+    }
+
+Step #5:
+
+Test the component:
+
+In incidents.html:
+
+<h1>Test Composite</h1>
+<div class="oj-hybrid-padding">
+  <h1>Test Composite</h1>
+  <div>
+  <oj-name-badge badge-name="Duke Mascot"
+              badge-image="https://upload.wikimedia.org/wikipedia/commons/b/b1/ThumbsUp.svg">
+  </oj-name-badge>
+  </div>
+</div>
+
+Your component should appear on the incidents.html
